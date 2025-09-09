@@ -1,0 +1,110 @@
+import {
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLString,
+  GraphQLInt,
+} from "graphql";
+
+const users = [
+  {
+    id: "1",
+    name: "furqan",
+    age: 22,
+  },
+  {
+    id: "2",
+    name: "unknown",
+    age: 25,
+  },
+];
+
+const userType = new GraphQLObjectType({
+  name: "User",
+  fields: {
+    id: { type: GraphQLString },
+    name: { type: GraphQLString },
+    age: { type: GraphQLInt },
+  },
+});
+
+// it is must to have root query
+const RootQuery = new GraphQLObjectType({
+  //define queries and mutations here
+  name: "RootQueryType", //it cannot be empty should provide name it can be any.it's query representor should be unique
+  fields: {
+    // all queries should must be written in fields
+
+    user: {
+      type: userType,
+      args: { id: { type: GraphQLString } }, // return data base on id further more can be added
+      resolve(parent, args) {
+        // resolve decide where to fetch data and what will return but based on type
+        return users.find((user) => user.id === args.id);
+      },
+    },
+
+    hello: {
+      //query name
+      type: GraphQLString, //type of data return further it has data types
+      resolve() {
+        // it return actual data
+        return "Hello from GraphQL";
+      },
+    },
+  },
+});
+
+// mutation type working
+
+const Mutation = new GraphQLObjectType({
+  name: "Mutation",
+  fields: {
+    addUser: {
+      type: userType,
+      args: { name: { type: GraphQLString }, age: { type: GraphQLInt } },
+      resolve(parent, args) {
+        const user = {
+          id: users.length.toString(),
+          name: args.name,
+          age: args.age,
+        };
+        users.push(user);
+        return user;
+      },
+    },
+    updateUser: {
+      type: userType,
+      args: {
+        id: { type: GraphQLString },
+        name: { type: GraphQLString },
+        age: { type: GraphQLInt },
+      },
+      resolve(parent, args) {
+        const user = users.find((u) => u.id === args.id);
+        if (user) {
+          user.name = args.name ?? user.name;
+          user.age = args.age ?? user.age;
+          return user;
+        }
+        throw new Error("User not found");
+      },
+    },
+    deleteUser: {
+      type: userType,
+      args: { id: { type: GraphQLString } },
+      resolve(parent, args) {
+        const index = users.findIndex((u) => u.id === args.id);
+        if (index === -1) {
+          throw new Error("User not found");
+        }
+        return users.slice(index,1)[0];
+      },
+    },
+  },
+});
+
+export const schema = new GraphQLSchema({
+  //we are register our query in Schema for use
+  query: RootQuery,
+  mutation: Mutation,
+});
