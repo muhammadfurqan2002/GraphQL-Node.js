@@ -2,7 +2,7 @@ import dotenv from 'dotenv'
 dotenv.config();
 import express from 'express';
 import { graphqlHTTP } from 'express-graphql';
-import {schema} from './schema/schema.js';
+import {schema} from './schema/index.js';
 import mongoose from 'mongoose';
 mongoose.connect(process.env.MONGO_URI).then(()=>{
     console.log("Mongoose connected");

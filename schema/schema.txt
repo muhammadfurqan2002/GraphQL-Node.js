@@ -108,3 +108,15 @@ export const schema = new GraphQLSchema({
   query: RootQuery,
   mutation: Mutation,
 });
+
+
+
+// Mongoose connection creating and schema and model creation using crud
+
+
+// GraphQL Input Types & Validation | Custom Types
+
+// One-to-Many Relationship implement
+
+Note all models have types
+

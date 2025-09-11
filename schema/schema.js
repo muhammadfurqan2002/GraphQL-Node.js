@@ -4,8 +4,21 @@ import {
   GraphQLString,
   GraphQLInt,
   GraphQLList,
+  GraphQLInputObjectType,
+  GraphQLNonNull
 } from "graphql";
 import userModel from "../models/user.js";
+
+
+const userInputType = new GraphQLInputObjectType({
+  name:"UserInput",
+  fields:{
+    name:{type:new GraphQLNonNull(GraphQLString)},
+    age:{type:GraphQLInt}
+  }
+})
+
+
 
 const userType = new GraphQLObjectType({
   name: "User",
@@ -50,11 +63,16 @@ const Mutation = new GraphQLObjectType({
   fields: {
     addUser: {
       type: userType,
-      args: { name: { type: GraphQLString }, age: { type: GraphQLInt } },
-      async resolve(parent, args) {
+      args: { 
+        input:{type:userInputType}
+      },
+      async resolve(_,{input}) {
+        if(!input.name || !input.age){
+            throw new Error("Please provide required fields")
+        }
         const user = new userModel({
-          name: args.name,
-          age: args.age,
+          name: input.name,
+          age: input.age,
         });
         await user.save();
         return user;
