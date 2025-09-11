@@ -3,9 +3,20 @@ import {
   GraphQLObjectType,
   GraphQLString,
   GraphQLInt,
-  GraphQLList,
 } from "graphql";
-import userModel from "../models/user.js";
+
+const users = [
+  {
+    id: "1",
+    name: "furqan",
+    age: 22,
+  },
+  {
+    id: "2",
+    name: "unknown",
+    age: 25,
+  },
+];
 
 const userType = new GraphQLObjectType({
   name: "User",
@@ -23,21 +34,21 @@ const RootQuery = new GraphQLObjectType({
   fields: {
     // all queries should must be written in fields
 
-    users: {
-      type: new GraphQLList(userType),
-      resolve(parent, args) {
-        // it is not necessary to use async in query it handle it by default
-        return userModel.find();
-      },
-    },
-
     user: {
       type: userType,
       args: { id: { type: GraphQLString } }, // return data base on id further more can be added
       resolve(parent, args) {
         // resolve decide where to fetch data and what will return but based on type
-        const user = userModel.findById(args.id);
-        return user;
+        return users.find((user) => user.id === args.id);
+      },
+    },
+
+    hello: {
+      //query name
+      type: GraphQLString, //type of data return further it has data types
+      resolve() {
+        // it return actual data
+        return "Hello from GraphQL";
       },
     },
   },
@@ -51,12 +62,13 @@ const Mutation = new GraphQLObjectType({
     addUser: {
       type: userType,
       args: { name: { type: GraphQLString }, age: { type: GraphQLInt } },
-      async resolve(parent, args) {
-        const user = new userModel({
+      resolve(parent, args) {
+        const user = {
+          id: users.length.toString(),
           name: args.name,
           age: args.age,
-        });
-        await user.save();
+        };
+        users.push(user);
         return user;
       },
     },
@@ -67,21 +79,25 @@ const Mutation = new GraphQLObjectType({
         name: { type: GraphQLString },
         age: { type: GraphQLInt },
       },
-      async resolve(parent, args) {
-        const user = await userModel.findByIdAndUpdate(
-          args.id,
-          { name: args.name, age: args.age },
-          { new: true }
-        );
-        return user;
+      resolve(parent, args) {
+        const user = users.find((u) => u.id === args.id);
+        if (user) {
+          user.name = args.name ?? user.name;
+          user.age = args.age ?? user.age;
+          return user;
+        }
+        throw new Error("User not found");
       },
     },
     deleteUser: {
       type: userType,
       args: { id: { type: GraphQLString } },
-      async resolve(parent, args) {
-        const user = await userModel.findByIdAndDelete(args.id);
-        return user;
+      resolve(parent, args) {
+        const index = users.findIndex((u) => u.id === args.id);
+        if (index === -1) {
+          throw new Error("User not found");
+        }
+        return users.slice(index,1)[0];
       },
     },
   },
