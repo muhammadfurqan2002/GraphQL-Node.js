@@ -1,8 +1,9 @@
-import {GraphQLObjectType,GraphQLID,GraphQLString,GraphQLList,GraphQLSchema, GraphQLInputObjectType} from 'graphql'
+import {GraphQLObjectType,GraphQLID,GraphQLString,GraphQLList,GraphQLSchema, GraphQLInputObjectType, GraphQLInt} from 'graphql'
 import authorType from '../types/authorType.js'
 import bookType from '../types/bookType.js'
 import bookModel from '../models/book.js'
 import authorModel from '../models/author.js'
+import bookPaginationType from '../types/booksPagination.js'
 
 
 
@@ -57,10 +58,32 @@ const RootQUery=new GraphQLObjectType({
                 }
             },
             books:{
-                type:new GraphQLList(bookType),
-                resolve(){
-                    const books=bookModel.find();
-                    return books;
+                // type:new GraphQLList(bookType),
+                // type:new GraphQLList(bookPaginationType),
+                type:bookPaginationType, // for [pagination we done these things]
+                args:{
+                  page:{type:GraphQLInt},
+                  authorId:{type:GraphQLID},
+
+                },
+                async resolve(parent,args){
+                    const limit=5;
+                    const page=args.page|1;
+                    const offset=(page-1)*limit;
+                    const filtering={};
+                    if(args.authorId){
+                        filtering.authorId=args.authorId;
+                    }
+                    const totalCount=await bookModel.countDocuments(filtering);
+                    const totalPages=Math.ceil(totalCount/limit);
+                    const books=await bookModel.find(filtering).skip(offset).limit(limit);
+                    return {
+                        books,
+                        totalPages,
+                        currentPage:page,
+                        hasNextPage:page<totalPages?"true":"false",
+                        hasPreviousPage:page>1?"true":"false",
+                    };
                 }
             }
         }
