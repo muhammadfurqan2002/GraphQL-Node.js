@@ -1,6 +1,8 @@
 import {GraphQLObjectType,GraphQLID,GraphQLString,GraphQLList, GraphQLNonNull} from 'graphql'
 import authorType from '../types/authorType.js';
 import authorModel from '../models/author.js';
+import categoryType from './categoryType.js';
+import categoryModel from '../models/category.js';
 
 const bookType=new GraphQLObjectType({
     name:"Book",
@@ -10,8 +12,14 @@ const bookType=new GraphQLObjectType({
         authorId:{type:GraphQLID},
         author:{
             type:authorType,
-            resolve(parent){
+            async resolve(parent){
                 return authorModel.findById(parent.authorId);
+            }
+        },
+        categories:{
+            type:new GraphQLList(categoryType),
+            async resolve(parent){
+                return categoryModel.find({_id:{$in: parent.categoryIds}})
             }
         }
     })

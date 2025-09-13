@@ -1,15 +1,33 @@
-import {GraphQLObjectType,GraphQLID,GraphQLString,GraphQLList,GraphQLSchema, GraphQLInputObjectType, GraphQLInt} from 'graphql'
+import {GraphQLObjectType,GraphQLID,GraphQLString,GraphQLList,GraphQLSchema, GraphQLInputObjectType, GraphQLInt, GraphQLNonNull} from 'graphql'
 import authorType from '../types/authorType.js'
 import bookType from '../types/bookType.js'
 import bookModel from '../models/book.js'
 import authorModel from '../models/author.js'
 import bookPaginationType from '../types/booksPagination.js'
+import categoryType from '../types/categoryType.js'
+import categoryModel from '../models/category.js'
 
 
 
 const Mutation=new GraphQLObjectType({
     name:"Mutation",
     fields:{
+
+        addCategory:{
+            type:categoryType,
+            args:{
+                name:{type:new GraphQLNonNull(GraphQLString)}
+            },
+            async resolve(parent,args){
+                const category=await categoryModel.create({
+                    name:args.name
+                })
+                category.save();
+                return category;
+            }
+        },
+
+
         addAuthor:{
             type: authorType,
             args:{
@@ -28,12 +46,14 @@ const Mutation=new GraphQLObjectType({
             type: bookType,
             args:{
                 title:{type:GraphQLString},
-                authorId:{type:GraphQLID}
+                authorId:{type:GraphQLID},
+                categoryIds:{type:new GraphQLList(GraphQLID)},
             },
             async resolve(parent,args){
                const book= await bookModel.create({
                     title:args.title,
-                    authorId:args.authorId
+                    authorId:args.authorId,
+                    categoryIds:args.categoryIds
                 });
                 book.save();
                 return book;
@@ -64,11 +84,10 @@ const RootQUery=new GraphQLObjectType({
                 args:{
                   page:{type:GraphQLInt},
                   authorId:{type:GraphQLID},
-
                 },
                 async resolve(parent,args){
                     const limit=5;
-                    const page=args.page|1;
+                    const page=args.page||1;
                     const offset=(page-1)*limit;
                     const filtering={};
                     if(args.authorId){
@@ -84,6 +103,21 @@ const RootQUery=new GraphQLObjectType({
                         hasNextPage:page<totalPages?"true":"false",
                         hasPreviousPage:page>1?"true":"false",
                     };
+                }
+            },
+            category:{
+                type:categoryType,
+                args:{
+                    id:{type:GraphQLID},
+                },
+                resolve(parent){
+                    return categoryModel.findById(parent.id);
+                }
+            },
+            categories:{
+                type:new GraphQLList(categoryType),
+                resolve(parent){
+                    return categoryModel.find();
                 }
             }
         }
