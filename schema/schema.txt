@@ -116,7 +116,9 @@ export const schema = new GraphQLSchema({
 
 // GraphQL Input Types & Validation | Custom Types
 
-// One-to-Many Relationship implement
+// One-to-Many Relationship implement And Nested Populates
 
 Note all models have types
+
+// Many-to-one Relationship
 
