@@ -16,16 +16,32 @@ const Mutation=new GraphQLObjectType({
         addCategory:{
             type:categoryType,
             args:{
-                name:{type:new GraphQLNonNull(GraphQLString)}
+                name:{type:new GraphQLNonNull(GraphQLString),},
+                parentCategory:{type:GraphQLID}
             },
             async resolve(parent,args){
                 const category=await categoryModel.create({
-                    name:args.name
+                    name:args.name,
+                    parentCategory:args.parentCategory||null
                 })
                 category.save();
                 return category;
             }
         },
+
+        // addCategory:{
+        //     type:categoryType,
+        //     args:{
+        //         name:{type:new GraphQLNonNull(GraphQLString)}
+        //     },
+        //     async resolve(parent,args){
+        //         const category=await categoryModel.create({
+        //             name:args.name
+        //         })
+        //         category.save();
+        //         return category;
+        //     }
+        // },
 
 
         addAuthor:{
@@ -110,8 +126,8 @@ const RootQUery=new GraphQLObjectType({
                 args:{
                     id:{type:GraphQLID},
                 },
-                resolve(parent){
-                    return categoryModel.findById(parent.id);
+                resolve(parent,args){
+                    return categoryModel.findById(args.id);
                 }
             },
             categories:{

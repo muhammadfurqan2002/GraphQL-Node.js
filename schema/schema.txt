@@ -126,3 +126,7 @@ Note all models have types
 
 //Many-to-Many Relationship
       Book & Category
+
+
+// Implementing self-referencing Relationships
+    Category -> Subcategory
