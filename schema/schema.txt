@@ -130,3 +130,25 @@ Note all models have types
 
 // Implementing self-referencing Relationships
     Category -> Subcategory
+
+
+// Polymorphic Relationships
+  Post,Video -> Comments
+
+// Polymorphism Query for fetching data
+  query{
+ comments{
+  id,content,commentableId,commentableType,
+  commentableData{
+    ... on Post{
+      id,
+      title,
+      content
+    },
+    ... on Video{
+      title,
+      url
+    }
+  }
+}
+}
